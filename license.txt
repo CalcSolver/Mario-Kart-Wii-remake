@@ -1,11 +1,11 @@
 Model Information:
-* title:	mario kart Wii - Moonview Highway
-* source:	https://sketchfab.com/3d-models/mario-kart-wii-moonview-highway-efe618234dbc4725bf13cfb8808be571
-* author:	H,yoshi (https://sketchfab.com/HY2245)
+* title:	standard kart
+* source:	https://sketchfab.com/3d-models/standard-kart-2e0996e9b43e4a9385c4e0ee64cbb169
+* author:	amogusstrikesback2 (https://sketchfab.com/amogusstrikesback2)
 
 Model License:
 * license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
 * requirements:	Author must be credited. Commercial use is allowed.
 
 If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
-This work is based on "mario kart Wii - Moonview Highway" (https://sketchfab.com/3d-models/mario-kart-wii-moonview-highway-efe618234dbc4725bf13cfb8808be571) by H,yoshi (https://sketchfab.com/HY2245) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+This work is based on "standard kart" (https://sketchfab.com/3d-models/standard-kart-2e0996e9b43e4a9385c4e0ee64cbb169) by amogusstrikesback2 (https://sketchfab.com/amogusstrikesback2) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
