@@ -190,17 +190,16 @@
     });
 
     // ==========================================
-    // 4. SUBFOLDER-AWARE GLTF LOADER SETUP
+    // 4. SUBFOLDER GLTF LOADER SETUP
     // ==========================================
     const loadingManager = new THREE.LoadingManager();
 
-    // Map any relative texture or bin files back to the subfolder on GitHub
+    // Route internal GLTF texture/bin references to the subfolder on GitHub
     loadingManager.setURLModifier((url) => {
       if (url.startsWith('data:') || url.startsWith('http://') || url.startsWith('https://')) {
         return url;
       }
       
-      // Remove leading slashes or relative dot paths
       const cleanPath = url.replace(/^(\/|\.\/)/, '');
       return GITHUB_BASE_URL + cleanPath;
     });
@@ -210,8 +209,11 @@
 
     statusEl.innerText = "Downloading Track Model...";
     
+    // Explicitly load scene.gltf using the subfolder base URL
+    const fullModelUrl = GITHUB_BASE_URL + MODEL_FILENAME;
+
     gltfLoader.load(
-      GITHUB_BASE_URL + MODEL_FILENAME,
+      fullModelUrl,
       (gltf) => {
         const trackModel = gltf.scene;
         trackModel.traverse((child) => {
