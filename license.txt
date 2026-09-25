@@ -1,11 +1,11 @@
 Model Information:
-* title:	standard kart
-* source:	https://sketchfab.com/3d-models/standard-kart-2e0996e9b43e4a9385c4e0ee64cbb169
-* author:	amogusstrikesback2 (https://sketchfab.com/amogusstrikesback2)
+* title:	Mario obj
+* source:	https://sketchfab.com/3d-models/mario-obj-c549d24b60f74d8f85c7a5cbd2f55d0f
+* author:	MatiasH290 (https://sketchfab.com/matias029)
 
 Model License:
 * license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
 * requirements:	Author must be credited. Commercial use is allowed.
 
 If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
-This work is based on "standard kart" (https://sketchfab.com/3d-models/standard-kart-2e0996e9b43e4a9385c4e0ee64cbb169) by amogusstrikesback2 (https://sketchfab.com/amogusstrikesback2) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+This work is based on "Mario obj" (https://sketchfab.com/3d-models/mario-obj-c549d24b60f74d8f85c7a5cbd2f55d0f) by MatiasH290 (https://sketchfab.com/matias029) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
