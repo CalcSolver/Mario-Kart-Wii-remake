@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mario Kart Wii - Moonview Highway</title>
+  <title>Mario Kart Wii Remake</title>
   <style>
     * {
       box-sizing: border-box;
@@ -12,7 +12,7 @@
     }
 
     body {
-      background-color: #030712;
+      background-color: #0f172a;
       color: #ffffff;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       overflow: hidden;
@@ -76,147 +76,103 @@
     }
   </style>
 
+  <!-- Load Three.js core & GLTF loader -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 </head>
 <body>
 
   <div id="ui-overlay">
     <h1>Mario Kart Wii Remake</h1>
-    <p>Moonview Highway Night Circuit</p>
-    <div class="status" id="loading-status">Status: Ready to Drive!</div>
+    <p>Assets loaded directly from repository root.</p>
+    <div class="status" id="loading-status">Fetching map & textures...</div>
   </div>
 
   <div id="controls-hint">
-    🎮 <b>Controls:</b> WASD / Arrow Keys to Drive | Space to Brake
+    🎮 <b>Controls:</b> WASD or Arrow Keys to Drive | Space to Brake
   </div>
 
   <div id="canvas-container"></div>
 
   <script>
+    // ==========================================
+    // 1. GITHUB REPOSITORY CONFIGURATION (ROOT)
+    // ==========================================
+    const GITHUB_BASE_URL = 'https://raw.githubusercontent.com/CalcSolver/Mario-Kart-Wii-remake/main/';
+    const MODEL_FILENAME = 'scene.gltf';
+
+    // DOM Elements
     const container = document.getElementById('canvas-container');
+    const statusEl = document.getElementById('loading-status');
 
     // ==========================================
-    // 1. SCENE, CAMERA & RENDERER
+    // 2. THREE.JS SCENE & RENDERER SETUP
     // ==========================================
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x030712);
-    scene.fog = new THREE.FogExp2(0x030712, 0.005);
+    scene.background = new THREE.Color(0x0f172a);
+    scene.fog = new THREE.FogExp2(0x0f172a, 0.008);
 
-    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.outputEncoding = THREE.sRGBEncoding;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(renderer.domElement);
 
-    // Ambient Moonlight
-    const ambientLight = new THREE.AmbientLight(0x38bdf8, 0.6);
+    // Lighting setup
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.8);
     scene.add(ambientLight);
 
-    // Moon Light Source
-    const moonLight = new THREE.DirectionalLight(0x93c5fd, 1.2);
-    moonLight.position.set(50, 150, -100);
-    moonLight.castShadow = true;
-    scene.add(moonLight);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 2.0);
+    dirLight.position.set(100, 200, 100);
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.width = 2048;
+    dirLight.shadow.mapSize.height = 2048;
+    scene.add(dirLight);
 
     // ==========================================
-    // 2. MOONVIEW HIGHWAY ENVIRONMENT
-    // ==========================================
-    // Road Surface
-    const roadWidth = 24;
-    const roadLength = 1000;
-    const roadGeo = new THREE.PlaneGeometry(roadWidth, roadLength);
-    const roadMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.8 });
-    const road = new THREE.Mesh(roadGeo, roadMat);
-    road.rotation.x = -Math.PI / 2;
-    road.receiveShadow = true;
-    scene.add(road);
-
-    // Yellow Center Lines
-    const lineGeo = new THREE.PlaneGeometry(0.4, 4);
-    const lineMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
-    for (let z = -roadLength / 2; z < roadLength / 2; z += 12) {
-      const line = new THREE.Mesh(lineGeo, lineMat);
-      line.rotation.x = -Math.PI / 2;
-      line.position.set(0, 0.01, z);
-      scene.add(line);
-    }
-
-    // Highway Barriers
-    const barrierGeo = new THREE.BoxGeometry(0.8, 1.2, roadLength);
-    const barrierMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.5 });
-    
-    const leftBarrier = new THREE.Mesh(barrierGeo, barrierMat);
-    leftBarrier.position.set(-roadWidth / 2, 0.6, 0);
-    scene.add(leftBarrier);
-
-    const rightBarrier = new THREE.Mesh(barrierGeo, barrierMat);
-    rightBarrier.position.set(roadWidth / 2, 0.6, 0);
-    scene.add(rightBarrier);
-
-    // Overhead Streetlights
-    const poleGeo = new THREE.CylinderGeometry(0.15, 0.15, 8);
-    const poleMat = new THREE.MeshStandardMaterial({ color: 0x334155 });
-    for (let z = -roadLength / 2; z < roadLength / 2; z += 40) {
-      const pole = new THREE.Mesh(poleGeo, poleMat);
-      pole.position.set(-roadWidth / 2 - 1, 4, z);
-      scene.add(pole);
-
-      const light = new THREE.PointLight(0xfde047, 1.5, 25);
-      light.position.set(-roadWidth / 2 + 2, 7.5, z);
-      scene.add(light);
-    }
-
-    // ==========================================
-    // 3. PLAYER KART BUILD & HEADLIGHTS
+    // 3. PLAYER KART & VEHICLE PHYSICS
     // ==========================================
     const playerGroup = new THREE.Group();
     scene.add(playerGroup);
 
-    // Main Kart Body
-    const bodyGeo = new THREE.BoxGeometry(1.8, 0.6, 2.8);
-    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.2, metalness: 0.3 });
+    // Create Kart Mesh
+    const bodyGeo = new THREE.BoxGeometry(1.8, 0.8, 3);
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.2 });
     const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
     bodyMesh.position.y = 0.5;
     bodyMesh.castShadow = true;
     playerGroup.add(bodyMesh);
 
-    // Driver Seat
-    const cabinGeo = new THREE.SphereGeometry(0.6, 16, 16);
+    const cabinGeo = new THREE.SphereGeometry(0.7, 16, 16);
     const cabinMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.1 });
     const cabinMesh = new THREE.Mesh(cabinGeo, cabinMat);
-    cabinMesh.position.set(0, 0.9, -0.2);
+    cabinMesh.position.set(0, 1.1, -0.2);
     playerGroup.add(cabinMesh);
 
-    // Kart Headlights
-    const leftSpot = new THREE.SpotLight(0xffffff, 3, 40, Math.PI / 6, 0.5);
-    leftSpot.position.set(-0.6, 0.6, 1.4);
-    leftSpot.target.position.set(-0.6, 0, 10);
-    playerGroup.add(leftSpot);
-    playerGroup.add(leftSpot.target);
-
-    const rightSpot = new THREE.SpotLight(0xffffff, 3, 40, Math.PI / 6, 0.5);
-    rightSpot.position.set(0.6, 0.6, 1.4);
-    rightSpot.target.position.set(0.6, 0, 10);
-    playerGroup.add(rightSpot);
-    playerGroup.add(rightSpot.target);
-
+    // Starting Position
     playerGroup.position.set(0, 0, 0);
 
-    // ==========================================
-    // 4. DRIVING PHYSICS & CONTROLS
-    // ==========================================
+    // Driving Physics Parameters
     let speed = 0;
-    let maxSpeed = 1.0;
-    let reverseSpeed = -0.4;
-    let acceleration = 0.025;
+    let maxSpeed = 0.8;
+    let reverseSpeed = -0.3;
+    let acceleration = 0.02;
     let friction = 0.96;
     let turnSpeed = 0.035;
 
-    const keys = { forward: false, backward: false, left: false, right: false, brake: false };
+    const keys = {
+      forward: false,
+      backward: false,
+      left: false,
+      right: false,
+      brake: false
+    };
 
+    // Keyboard Event Listeners
     window.addEventListener('keydown', (e) => {
       if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') keys.forward = true;
       if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') keys.backward = true;
@@ -234,7 +190,54 @@
     });
 
     // ==========================================
-    // 5. ANIMATION LOOP & CHASE CAMERA
+    // 4. ROOT LEVEL GLTF LOADER SETUP
+    // ==========================================
+    const loadingManager = new THREE.LoadingManager();
+
+    // Map internal relative requests (e.g., scene.bin, textures/...) directly to GitHub root
+    loadingManager.setURLModifier((url) => {
+      if (url.startsWith('data:') || url.startsWith('http://') || url.startsWith('https://')) {
+        return url;
+      }
+      
+      const cleanPath = url.replace(/^(\/|\.\/)/, '');
+      return GITHUB_BASE_URL + cleanPath;
+    });
+
+    const gltfLoader = new THREE.GLTFLoader(loadingManager);
+    gltfLoader.setCrossOrigin('anonymous');
+
+    statusEl.innerText = "Downloading Track Model...";
+
+    const fullModelUrl = GITHUB_BASE_URL + MODEL_FILENAME;
+
+    gltfLoader.load(
+      fullModelUrl,
+      (gltf) => {
+        const trackModel = gltf.scene;
+        trackModel.traverse((child) => {
+          if (child.isMesh) {
+            child.receiveShadow = true;
+            child.castShadow = true;
+          }
+        });
+        scene.add(trackModel);
+        statusEl.innerText = "Track Loaded Successfully!";
+      },
+      (xhr) => {
+        if (xhr.lengthComputable) {
+          const percent = Math.round((xhr.loaded / xhr.total) * 100);
+          statusEl.innerText = `Loading Track: ${percent}%`;
+        }
+      },
+      (error) => {
+        console.error("GLTF Load Error:", error);
+        statusEl.innerText = "Error loading track file. Check browser console for details.";
+      }
+    );
+
+    // ==========================================
+    // 5. GAME LOOP & CHASE CAMERA
     // ==========================================
     function updatePhysics() {
       if (keys.forward) {
@@ -247,7 +250,9 @@
         speed *= friction;
       }
 
-      if (keys.brake) speed *= 0.85;
+      if (keys.brake) {
+        speed *= 0.85;
+      }
 
       if (Math.abs(speed) > 0.01) {
         const dir = speed > 0 ? 1 : -1;
@@ -257,17 +262,12 @@
 
       playerGroup.translateZ(speed);
 
-      // Keep player on highway boundaries
-      const limitX = (roadWidth / 2) - 1.5;
-      if (playerGroup.position.x > limitX) playerGroup.position.x = limitX;
-      if (playerGroup.position.x < -limitX) playerGroup.position.x = -limitX;
-
       // Camera Follow Logic
-      const relativeCameraOffset = new THREE.Vector3(0, 5, -12);
+      const relativeCameraOffset = new THREE.Vector3(0, 6, -14);
       const cameraPosition = relativeCameraOffset.applyMatrix4(playerGroup.matrixWorld);
       
       camera.position.lerp(cameraPosition, 0.1);
-      camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1.2, playerGroup.position.z);
+      camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1.5, playerGroup.position.z);
     }
 
     function animate() {
