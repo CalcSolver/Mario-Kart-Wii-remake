@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mario Kart Wii Remake - Moonview Highway</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #0f172a;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    #canvas-container {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+
+    #ui-overlay {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 10;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      padding: 16px 20px;
+      border-radius: 12px;
+      border: 1px solid #334155;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      max-width: 360px;
+    }
+
+    h1 {
+      font-size: 1.2rem;
+      margin-bottom: 6px;
+      color: #38bdf8;
+    }
+
+    p {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      line-height: 1.4;
+    }
+
+    .status {
+      margin-top: 10px;
+      font-size: 0.8rem;
+      font-family: monospace;
+      color: #4ade80;
+    }
+
+    #controls-hint {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      z-index: 10;
+      background: rgba(15, 23, 42, 0.75);
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      color: #e2e8f0;
+      border: 1px solid #334155;
+    }
+  </style>
+
+  <!-- Load Three.js core & GLTF loader -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+</head>
+<body>
+
+  <div id="ui-overlay">
+    <h1>Mario Kart Wii Remake</h1>
+    <p>Assets loaded directly from your GitHub repository.</p>
+    <div class="status" id="loading-status">Fetching map & textures...</div>
+  </div>
+
+  <div id="controls-hint">
+    🎮 <b>Controls:</b> WASD or Arrow Keys to Drive | Space to Brake
+  </div>
+
+  <div id="canvas-container"></div>
+
+  <script>
+    // ==========================================
+    // 1. GITHUB REPOSITORY CONFIGURATION
+    // ==========================================
+    const GITHUB_BASE_URL = 'https://raw.githubusercontent.com/CalcSolver/Mario-Kart-Wii-remake/main/';
+    const MODEL_FILENAME = 'scene.gltf';
+
+    // DOM Elements
+    const container = document.getElementById('canvas-container');
+    const statusEl = document.getElementById('loading-status');
+
+    // ==========================================
+    // 2. THREE.JS SCENE & RENDERER SETUP
+    // ==========================================
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0f172a);
+    scene.fog = new THREE.FogExp2(0x0f172a, 0.008);
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    // Lighting setup
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.8);
+    scene.add(ambientLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 2.0);
+    dirLight.position.set(100, 200, 100);
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.width = 2048;
+    dirLight.shadow.mapSize.height = 2048;
+    scene.add(dirLight);
+
+    // ==========================================
+    // 3. PLAYER KART & VEHICLE PHYSICS
+    // ==========================================
+    const playerGroup = new THREE.Group();
+    scene.add(playerGroup);
+
+    // Create Kart Mesh
+    const bodyGeo = new THREE.BoxGeometry(1.8, 0.8, 3);
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.2 });
+    const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
+    bodyMesh.position.y = 0.5;
+    bodyMesh.castShadow = true;
+    playerGroup.add(bodyMesh);
+
+    const cabinGeo = new THREE.SphereGeometry(0.7, 16, 16);
+    const cabinMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.1 });
+    const cabinMesh = new THREE.Mesh(cabinGeo, cabinMat);
+    cabinMesh.position.set(0, 1.1, -0.2);
+    playerGroup.add(cabinMesh);
+
+    // Starting Position
+    playerGroup.position.set(0, 0, 0);
+
+    // Driving Physics Parameters
+    let speed = 0;
+    let maxSpeed = 0.8;
+    let reverseSpeed = -0.3;
+    let acceleration = 0.02;
+    let friction = 0.96;
+    let turnSpeed = 0.035;
+
+    const keys = {
+      forward: false,
+      backward: false,
+      left: false,
+      right: false,
+      brake: false
+    };
+
+    // Keyboard Event Listeners
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') keys.forward = true;
+      if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') keys.backward = true;
+      if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') keys.left = true;
+      if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') keys.right = true;
+      if (e.key === ' ') keys.brake = true;
+    });
+
+    window.addEventListener('keyup', (e) => {
+      if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') keys.forward = false;
+      if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') keys.backward = false;
+      if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') keys.left = false;
+      if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') keys.right = false;
+      if (e.key === ' ') keys.brake = false;
+    });
+
+    // ==========================================
+    // 4. STANDARD GLTF LOADER SETUP
+    // ==========================================
+    const gltfLoader = new THREE.GLTFLoader();
+    gltfLoader.setCrossOrigin('anonymous');
+
+    statusEl.innerText = "Downloading Track Model...";
+    
+    gltfLoader.load(
+      GITHUB_BASE_URL + MODEL_FILENAME,
+      (gltf) => {
+        const trackModel = gltf.scene;
+        trackModel.traverse((child) => {
+          if (child.isMesh) {
+            child.receiveShadow = true;
+            child.castShadow = true;
+          }
+        });
+        scene.add(trackModel);
+        statusEl.innerText = "Moonview Highway Loaded!";
+      },
+      (xhr) => {
+        if (xhr.lengthComputable) {
+          const percent = Math.round((xhr.loaded / xhr.total) * 100);
+          statusEl.innerText = `Loading Track: ${percent}%`;
+        }
+      },
+      (error) => {
+        console.error("GLTF Load Error:", error);
+        statusEl.innerText = "Error loading track file. Check browser console for details.";
+      }
+    );
+
+    // ==========================================
+    // 5. GAME LOOP & CHASE CAMERA
+    // ==========================================
+    function updatePhysics() {
+      if (keys.forward) {
+        speed += acceleration;
+        if (speed > maxSpeed) speed = maxSpeed;
+      } else if (keys.backward) {
+        speed -= acceleration;
+        if (speed < reverseSpeed) speed = reverseSpeed;
+      } else {
+        speed *= friction;
+      }
+
+      if (keys.brake) {
+        speed *= 0.85;
+      }
+
+      if (Math.abs(speed) > 0.01) {
+        const dir = speed > 0 ? 1 : -1;
+        if (keys.left) playerGroup.rotation.y += turnSpeed * dir;
+        if (keys.right) playerGroup.rotation.y -= turnSpeed * dir;
+      }
+
+      playerGroup.translateZ(speed);
+
+      // Camera Follow Logic
+      const relativeCameraOffset = new THREE.Vector3(0, 6, -14);
+      const cameraPosition = relativeCameraOffset.applyMatrix4(playerGroup.matrixWorld);
+      
+      camera.position.lerp(cameraPosition, 0.1);
+      camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1.5, playerGroup.position.z);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      updatePhysics();
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
