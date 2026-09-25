@@ -111,7 +111,7 @@
     // ==========================================
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x030712);
-    scene.fog = new THREE.FogExp2(0x030712, 0.005);
+    scene.fog = new THREE.FogExp2(0x030712, 0.003);
 
     const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 5000);
 
@@ -124,7 +124,7 @@
     container.appendChild(renderer.domElement);
 
     // Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.8);
     scene.add(ambientLight);
 
     const dirLight = new THREE.DirectionalLight(0xffffff, 2.0);
@@ -133,7 +133,7 @@
     scene.add(dirLight);
 
     // ==========================================
-    // 3. PLAYER KART + MARIO CHARACTER
+    // 3. PLAYER KART & DRIVER CONTAINER
     // ==========================================
     const playerGroup = new THREE.Group();
     scene.add(playerGroup);
@@ -170,29 +170,10 @@
       playerGroup.add(tire);
     });
 
-    // Mario Character
-    const marioGroup = new THREE.Group();
-    marioGroup.position.set(0, 0.7, -0.2);
-
-    const headGeo = new THREE.SphereGeometry(0.4, 16, 16);
-    const skinMat = new THREE.MeshStandardMaterial({ color: 0xffcd94 });
-    const head = new THREE.Mesh(headGeo, skinMat);
-    head.position.y = 0.9;
-    marioGroup.add(head);
-
-    const capGeo = new THREE.SphereGeometry(0.42, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
-    const capMat = new THREE.MeshStandardMaterial({ color: 0xdc2626 });
-    const cap = new THREE.Mesh(capGeo, capMat);
-    cap.position.set(0, 1.0, 0);
-    marioGroup.add(cap);
-
-    const torsoGeo = new THREE.CylinderGeometry(0.35, 0.4, 0.7, 16);
-    const overallsMat = new THREE.MeshStandardMaterial({ color: 0x2563eb });
-    const torso = new THREE.Mesh(torsoGeo, overallsMat);
-    torso.position.y = 0.35;
-    marioGroup.add(torso);
-
-    playerGroup.add(marioGroup);
+    // Driver Holder Group (Placed inside the kart cockpit)
+    const driverGroup = new THREE.Group();
+    driverGroup.position.set(0, 0.7, -0.2);
+    playerGroup.add(driverGroup);
 
     // Starting Position on the track
     playerGroup.position.set(0, 0, 0);
@@ -224,11 +205,10 @@
     });
 
     // ==========================================
-    // 4. MAP GLTF & TEXTURE LOADER
+    // 4. LOADING MANAGER & MAPPING
     // ==========================================
     const loadingManager = new THREE.LoadingManager();
 
-    // Route relative paths (scene.bin, textures/...) to GitHub root
     loadingManager.setURLModifier((url) => {
       if (url.startsWith('data:') || url.startsWith('http://') || url.startsWith('https://')) {
         return url;
@@ -237,6 +217,7 @@
       return GITHUB_BASE_URL + cleanPath;
     });
 
+    // --- LOAD MAP ---
     const gltfLoader = new THREE.GLTFLoader(loadingManager);
     gltfLoader.setCrossOrigin('anonymous');
 
@@ -246,8 +227,6 @@
       GITHUB_BASE_URL + MODEL_FILENAME,
       (gltf) => {
         const trackModel = gltf.scene;
-        
-        // Scale and place track correctly under kart
         trackModel.scale.set(1, 1, 1);
         trackModel.position.set(0, 0, 0);
 
@@ -259,12 +238,12 @@
         });
 
         scene.add(trackModel);
-        statusEl.innerText = "Moonview Highway Loaded!";
+        statusEl.innerText = "Moonview Highway & Kart Ready!";
       },
       (xhr) => {
         if (xhr.lengthComputable) {
           const percent = Math.round((xhr.loaded / xhr.total) * 100);
-          statusEl.innerText = `Loading Track: ${percent}%`;
+          statusEl.innerText = `Loading Assets: ${percent}%`;
         }
       },
       (error) => {
@@ -272,6 +251,24 @@
         statusEl.innerText = "Error loading map. Check browser console.";
       }
     );
+
+    // --- LOAD MARIO CHARACTER INTO KART (If you upload a mario.obj / mario.mtl) ---
+    // If you have an OBJ file, put it in your root repo and call it here. Otherwise, it uses the integrated fallback.
+    const mtlLoader = new THREE.MTLLoader(loadingManager);
+    mtlLoader.load(GITHUB_BASE_URL + 'mario.mtl', (materials) => {
+      materials.preload();
+      const objLoader = new THREE.OBJLoader(loadingManager);
+      objLoader.setMaterials(materials);
+      objLoader.load(GITHUB_BASE_URL + 'mario.obj', (object) => {
+        object.scale.set(0.35, 0.35, 0.35);
+        object.position.set(0, 0.2, 0);
+        driverGroup.add(object);
+      }, undefined, (err) => {
+        console.log("Mario OBJ not found yet, using built-in driver placeholder.");
+      });
+    }, undefined, (err) => {
+      console.log("Mario MTL not found yet.");
+    });
 
     // ==========================================
     // 5. GAME LOOP & CHASE CAMERA
