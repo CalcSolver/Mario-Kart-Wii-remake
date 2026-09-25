@@ -3,175 +3,80 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mario Kart Wii Remake - Moonview Highway</title>
-  
+  <title>Mario Kart Wii Remake</title>
   <style>
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      user-select: none;
     }
 
-    body, html {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background-color: #0b0f19;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    body {
+      background-color: #030712;
       color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
     }
 
     #canvas-container {
-      width: 100vw;
-      height: 100vh;
+      width: 100%;
+      height: 100%;
       position: absolute;
       top: 0;
       left: 0;
       z-index: 1;
     }
 
-    /* HUD Header Panel */
-    #ui-hud {
+    #ui-overlay {
       position: absolute;
       top: 20px;
       left: 20px;
       z-index: 10;
       background: rgba(15, 23, 42, 0.85);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      padding: 18px 22px;
-      border-radius: 16px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
-      min-width: 280px;
-      pointer-events: none;
+      backdrop-filter: blur(8px);
+      padding: 16px 20px;
+      border-radius: 12px;
+      border: 1px solid #334155;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      max-width: 360px;
     }
 
-    .game-title {
-      font-size: 1.25rem;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      background: linear-gradient(135deg, #38bdf8 0%, #3b82f6 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 4px;
+    h1 {
+      font-size: 1.2rem;
+      margin-bottom: 6px;
+      color: #38bdf8;
     }
 
-    .track-subtitle {
+    p {
       font-size: 0.85rem;
       color: #94a3b8;
-      font-weight: 500;
-      margin-bottom: 12px;
+      line-height: 1.4;
     }
 
-    .status-container {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 10px;
+    .status {
+      margin-top: 10px;
+      font-size: 0.8rem;
+      font-family: monospace;
+      color: #4ade80;
     }
 
-    .status-indicator {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background-color: #f59e0b;
-      box-shadow: 0 0 10px #f59e0b;
-      transition: background-color 0.3s, box-shadow 0.3s;
-    }
-
-    .status-indicator.ready {
-      background-color: #10b981;
-      box-shadow: 0 0 10px #10b981;
-    }
-
-    .status-text {
-      font-size: 0.82rem;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      color: #cbd5e1;
-    }
-
-    /* Progress Bar */
-    .progress-bar-bg {
-      width: 100%;
-      height: 6px;
-      background: #1e293b;
-      border-radius: 4px;
-      overflow: hidden;
-    }
-
-    .progress-bar-fill {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #38bdf8, #4ade80);
-      transition: width 0.2s ease-out;
-    }
-
-    /* Speedometer Dashboard */
-    #speedometer-panel {
-      position: absolute;
-      bottom: 24px;
-      right: 24px;
-      z-index: 10;
-      background: rgba(15, 23, 42, 0.85);
-      backdrop-filter: blur(12px);
-      padding: 16px 24px;
-      border-radius: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      pointer-events: none;
-    }
-
-    .speed-number {
-      font-size: 2.8rem;
-      font-weight: 900;
-      font-family: ui-monospace, SFMono-Regular, monospace;
-      color: #f8fafc;
-      line-height: 1;
-    }
-
-    .speed-unit {
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: #64748b;
-      letter-spacing: 1.5px;
-      margin-top: 4px;
-    }
-
-    /* Controls Legend Overlay */
     #controls-hint {
       position: absolute;
-      bottom: 24px;
-      left: 24px;
+      bottom: 20px;
+      left: 20px;
       z-index: 10;
-      background: rgba(15, 23, 42, 0.85);
-      backdrop-filter: blur(12px);
-      padding: 14px 20px;
-      border-radius: 14px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      font-size: 0.82rem;
+      background: rgba(15, 23, 42, 0.75);
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 0.8rem;
       color: #e2e8f0;
-      display: flex;
-      gap: 16px;
-      align-items: center;
-      pointer-events: none;
-    }
-
-    .key-badge {
-      background: #334155;
-      color: #f8fafc;
-      padding: 3px 8px;
-      border-radius: 6px;
-      font-weight: 700;
-      font-size: 0.75rem;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      border: 1px solid #334155;
     }
   </style>
 
+  <!-- Load Three.js core & Loaders -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/MTLLoader.js"></script>
@@ -179,51 +84,38 @@
 </head>
 <body>
 
-  <!-- HUD HTML Structure -->
-  <div id="ui-hud">
-    <div class="game-title">MARIO KART WII</div>
-    <div class="track-subtitle">Moonview Highway Remake</div>
-    <div class="status-container">
-      <div id="status-dot" class="status-indicator"></div>
-      <div id="status-text" class="status-text">Initializing Engine...</div>
-    </div>
-    <div class="progress-bar-bg">
-      <div id="progress-fill" class="progress-bar-fill"></div>
-    </div>
-  </div>
-
-  <div id="speedometer-panel">
-    <div id="speed-display" class="speed-number">00</div>
-    <div class="speed-unit">KM/H</div>
+  <div id="ui-overlay">
+    <h1>Mario Kart Wii Remake</h1>
+    <p>Moonview Highway Circuit</p>
+    <div class="status" id="loading-status">Loading map & textures...</div>
   </div>
 
   <div id="controls-hint">
-    <div><span class="key-badge">W</span> <span class="key-badge">S</span> / <span class="key-badge">↑</span> <span class="key-badge">↓</span> Accelerate / Reverse</div>
-    <div><span class="key-badge">A</span> <span class="key-badge">D</span> / <span class="key-badge">←</span> <span class="key-badge">→</span> Steer</div>
-    <div><span class="key-badge">SPACE</span> Brake</div>
+    🎮 <b>Controls:</b> WASD or Arrow Keys to Drive | Space to Brake
   </div>
 
   <div id="canvas-container"></div>
 
   <script>
-    // GitHub Repository Asset Base Path
+    // ==========================================
+    // 1. REPOSITORY PATH CONFIGURATION
+    // ==========================================
     const GITHUB_BASE_URL = 'https://raw.githubusercontent.com/CalcSolver/Mario-Kart-Wii-remake/main/';
     const MODEL_FILENAME = 'scene.gltf';
 
-    // DOM UI elements
     const container = document.getElementById('canvas-container');
-    const statusText = document.getElementById('status-text');
-    const statusDot = document.getElementById('status-dot');
-    const progressFill = document.getElementById('progress-fill');
-    const speedDisplay = document.getElementById('speed-display');
+    const statusEl = document.getElementById('loading-status');
 
+    // ==========================================
+    // 2. SCENE, CAMERA & RENDERER
+    // ==========================================
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a0e17);
-    scene.fog = new THREE.FogExp2(0x0a0e17, 0.0015);
+    scene.background = new THREE.Color(0x030712);
+    scene.fog = new THREE.FogExp2(0x030712, 0.005);
 
     const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 5000);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputEncoding = THREE.sRGBEncoding;
@@ -231,204 +123,87 @@
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(renderer.domElement);
 
-    // Dynamic Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 2.2);
+    // Lights
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xfffaed, 2.5);
-    dirLight.position.set(150, 300, 150);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 2.0);
+    dirLight.position.set(100, 300, 100);
     dirLight.castShadow = true;
-    dirLight.shadow.mapSize.width = 2048;
-    dirLight.shadow.mapSize.height = 2048;
-    dirLight.shadow.camera.near = 0.5;
-    dirLight.shadow.camera.far = 1000;
     scene.add(dirLight);
 
-    const hemiLight = new THREE.HemisphereLight(0x38bdf8, 0x1e293b, 1.0);
-    scene.add(hemiLight);
-
+    // ==========================================
+    // 3. PLAYER KART + MARIO CHARACTER
+    // ==========================================
     const playerGroup = new THREE.Group();
     scene.add(playerGroup);
 
-    const wheelMeshes = [];
+    // Kart Chassis
+    const bodyGeo = new THREE.BoxGeometry(2.0, 0.7, 3.2);
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.3 });
+    const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
+    bodyMesh.position.y = 0.5;
+    bodyMesh.castShadow = true;
+    playerGroup.add(bodyMesh);
 
-    function buildKartAndMario() {
-      // 1. Kart Chassis
-      const chassisGeo = new THREE.BoxGeometry(2.4, 0.7, 3.8);
-      const chassisMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.2, metalness: 0.8 });
-      const chassis = new THREE.Mesh(chassisGeo, chassisMat);
-      chassis.position.y = 0.6;
-      chassis.castShadow = true;
-      playerGroup.add(chassis);
+    // Steering Wheel
+    const wheelGeo = new THREE.TorusGeometry(0.3, 0.06, 8, 16);
+    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
+    const steeringWheel = new THREE.Mesh(wheelGeo, wheelMat);
+    steeringWheel.rotation.x = Math.PI / 3;
+    steeringWheel.position.set(0, 1.1, 0.7);
+    playerGroup.add(steeringWheel);
 
-      // Kart Front Nose
-      const noseGeo = new THREE.ConeGeometry(1.2, 1.4, 16);
-      const noseMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.2, metalness: 0.8 });
-      const nose = new THREE.Mesh(noseGeo, noseMat);
-      nose.rotation.x = Math.PI / 2;
-      nose.position.set(0, 0.55, 2.3);
-      playerGroup.add(nose);
+    // Wheels
+    const tireGeo = new THREE.CylinderGeometry(0.45, 0.45, 0.35, 16);
+    const tireMat = new THREE.MeshStandardMaterial({ color: 0x1e293b });
+    const wheelPositions = [
+      [-1.2, 0.45, 1.1],
+      [1.2, 0.45, 1.1],
+      [-1.2, 0.45, -1.1],
+      [1.2, 0.45, -1.1]
+    ];
+    wheelPositions.forEach(pos => {
+      const tire = new THREE.Mesh(tireGeo, tireMat);
+      tire.rotation.z = Math.PI / 2;
+      tire.position.set(...pos);
+      playerGroup.add(tire);
+    });
 
-      // Exhaust Pipes
-      const pipeGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.8, 12);
-      const pipeMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.9, roughness: 0.1 });
-      const pipe1 = new THREE.Mesh(pipeGeo, pipeMat);
-      pipe1.position.set(-0.6, 0.8, -1.9);
-      pipe1.rotation.x = -Math.PI / 6;
-      playerGroup.add(pipe1);
+    // Mario Character
+    const marioGroup = new THREE.Group();
+    marioGroup.position.set(0, 0.7, -0.2);
 
-      const pipe2 = pipe1.clone();
-      pipe2.position.x = 0.6;
-      playerGroup.add(pipe2);
+    const headGeo = new THREE.SphereGeometry(0.4, 16, 16);
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0xffcd94 });
+    const head = new THREE.Mesh(headGeo, skinMat);
+    head.position.y = 0.9;
+    marioGroup.add(head);
 
-      // Steering Wheel
-      const wheelRingGeo = new THREE.TorusGeometry(0.32, 0.06, 8, 20);
-      const wheelRingMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.8 });
-      const steeringWheel = new THREE.Mesh(wheelRingGeo, wheelRingMat);
-      steeringWheel.rotation.x = Math.PI / 3;
-      steeringWheel.position.set(0, 1.15, 0.8);
-      playerGroup.add(steeringWheel);
+    const capGeo = new THREE.SphereGeometry(0.42, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+    const capMat = new THREE.MeshStandardMaterial({ color: 0xdc2626 });
+    const cap = new THREE.Mesh(capGeo, capMat);
+    cap.position.set(0, 1.0, 0);
+    marioGroup.add(cap);
 
-      // Kart Wheels
-      const tireGeo = new THREE.CylinderGeometry(0.52, 0.52, 0.45, 24);
-      const tireMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.9 });
-      const rimGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.47, 16);
-      const rimMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, metalness: 0.8, roughness: 0.2 });
+    const torsoGeo = new THREE.CylinderGeometry(0.35, 0.4, 0.7, 16);
+    const overallsMat = new THREE.MeshStandardMaterial({ color: 0x2563eb });
+    const torso = new THREE.Mesh(torsoGeo, overallsMat);
+    torso.position.y = 0.35;
+    marioGroup.add(torso);
 
-      const wheelOffsets = [
-        [-1.35, 0.52, 1.3],
-        [1.35, 0.52, 1.3],
-        [-1.35, 0.52, -1.3],
-        [1.35, 0.52, -1.3]
-      ];
+    playerGroup.add(marioGroup);
 
-      wheelOffsets.forEach(pos => {
-        const wheelPivot = new THREE.Group();
-        wheelPivot.position.set(...pos);
+    // Starting Position on the track
+    playerGroup.position.set(0, 0, 0);
 
-        const tireMesh = new THREE.Mesh(tireGeo, tireMat);
-        tireMesh.rotation.z = Math.PI / 2;
-        tireMesh.castShadow = true;
-        wheelPivot.add(tireMesh);
-
-        const rimMesh = new THREE.Mesh(rimGeo, rimMat);
-        rimMesh.rotation.z = Math.PI / 2;
-        wheelPivot.add(rimMesh);
-
-        playerGroup.add(wheelPivot);
-        wheelMeshes.push(wheelPivot);
-      });
-
-      // 2. Mario Character Driver
-      const marioGroup = new THREE.Group();
-      marioGroup.position.set(0, 0.85, -0.1);
-
-      // Materials
-      const skinMat = new THREE.MeshStandardMaterial({ color: 0xffcca0, roughness: 0.6 });
-      const redCapMat = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.4 });
-      const blueOverallsMat = new THREE.MeshStandardMaterial({ color: 0x2563eb, roughness: 0.5 });
-      const brownMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.7 });
-      const whiteGloveMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.5 });
-
-      // Head
-      const headGeo = new THREE.SphereGeometry(0.42, 16, 16);
-      const head = new THREE.Mesh(headGeo, skinMat);
-      head.position.y = 1.0;
-      marioGroup.add(head);
-
-      // Nose
-      const noseCharGeo = new THREE.SphereGeometry(0.18, 12, 12);
-      const noseChar = new THREE.Mesh(noseCharGeo, skinMat);
-      noseChar.position.set(0, 1.02, 0.4);
-      marioGroup.add(noseChar);
-
-      // Mustache
-      const mustacheGeo = new THREE.BoxGeometry(0.42, 0.12, 0.15);
-      const mustache = new THREE.Mesh(mustacheGeo, brownMat);
-      mustache.position.set(0, 0.92, 0.42);
-      marioGroup.add(mustache);
-
-      // Red Cap
-      const capGeo = new THREE.SphereGeometry(0.45, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
-      const cap = new THREE.Mesh(capGeo, redCapMat);
-      cap.position.set(0, 1.05, 0);
-      marioGroup.add(cap);
-
-      // Cap Visor Brim
-      const brimGeo = new THREE.CylinderGeometry(0.52, 0.52, 0.04, 16, 1, false, -Math.PI / 3, Math.PI / 1.5);
-      const brim = new THREE.Mesh(brimGeo, redCapMat);
-      brim.position.set(0, 1.08, 0.22);
-      brim.rotation.x = 0.2;
-      marioGroup.add(brim);
-
-      // Torso (Shirt + Overalls)
-      const torsoGeo = new THREE.CylinderGeometry(0.38, 0.42, 0.75, 16);
-      const torso = new THREE.Mesh(torsoGeo, blueOverallsMat);
-      torso.position.y = 0.42;
-      marioGroup.add(torso);
-
-      // Arms extending to wheel
-      const armGeo = new THREE.CylinderGeometry(0.11, 0.11, 0.55);
-      
-      const leftArm = new THREE.Mesh(armGeo, redCapMat);
-      leftArm.position.set(-0.38, 0.55, 0.3);
-      leftArm.rotation.set(Math.PI / 3, 0, -Math.PI / 6);
-      marioGroup.add(leftArm);
-
-      const rightArm = new THREE.Mesh(armGeo, redCapMat);
-      rightArm.position.set(0.38, 0.55, 0.3);
-      rightArm.rotation.set(Math.PI / 3, 0, Math.PI / 6);
-      marioGroup.add(rightArm);
-
-      // Hands/Gloves
-      const gloveGeo = new THREE.SphereGeometry(0.14, 12, 12);
-      const leftGlove = new THREE.Mesh(gloveGeo, whiteGloveMat);
-      leftGlove.position.set(-0.28, 0.4, 0.72);
-      marioGroup.add(leftGlove);
-
-      const rightGlove = new THREE.Mesh(gloveGeo, whiteGloveMat);
-      rightGlove.position.set(0.28, 0.4, 0.72);
-      marioGroup.add(rightGlove);
-
-      playerGroup.add(marioGroup);
-    }
-
-    buildKartAndMario();
-
-    window.loadMarioOBJ = function(objUrl, mtlUrl = null) {
-      statusText.innerText = "Loading custom Mario OBJ...";
-      if (mtlUrl) {
-        const mtlLoader = new THREE.MTLLoader();
-        mtlLoader.load(mtlUrl, (materials) => {
-          materials.preload();
-          const objLoader = new THREE.OBJLoader();
-          objLoader.setMaterials(materials);
-          objLoader.load(objUrl, (object) => {
-            playerGroup.children = playerGroup.children.filter(c => !(c instanceof THREE.Group && c.position.y > 0.8));
-            object.scale.set(0.6, 0.6, 0.6);
-            object.position.set(0, 0.85, -0.1);
-            playerGroup.add(object);
-            statusText.innerText = "Custom Mario OBJ loaded!";
-          });
-        });
-      } else {
-        const objLoader = new THREE.OBJLoader();
-        objLoader.load(objUrl, (object) => {
-          playerGroup.children = playerGroup.children.filter(c => !(c instanceof THREE.Group && c.position.y > 0.8));
-          object.scale.set(0.6, 0.6, 0.6);
-          object.position.set(0, 0.85, -0.1);
-          playerGroup.add(object);
-          statusText.innerText = "Custom Mario OBJ loaded!";
-        });
-      }
-    };
-
+    // Physics
     let speed = 0;
-    let maxSpeed = 1.45;
-    let reverseSpeed = -0.5;
-    let acceleration = 0.035;
-    let friction = 0.965;
-    let turnSpeed = 0.038;
+    let maxSpeed = 1.0;
+    let reverseSpeed = -0.4;
+    let acceleration = 0.025;
+    let friction = 0.96;
+    let turnSpeed = 0.035;
 
     const keys = { forward: false, backward: false, left: false, right: false, brake: false };
 
@@ -448,9 +223,12 @@
       if (e.key === ' ') keys.brake = false;
     });
 
+    // ==========================================
+    // 4. MAP GLTF & TEXTURE LOADER
+    // ==========================================
     const loadingManager = new THREE.LoadingManager();
 
-    // Map internal GLTF texture/bin relative paths directly to GitHub root
+    // Route relative paths (scene.bin, textures/...) to GitHub root
     loadingManager.setURLModifier((url) => {
       if (url.startsWith('data:') || url.startsWith('http://') || url.startsWith('https://')) {
         return url;
@@ -462,66 +240,43 @@
     const gltfLoader = new THREE.GLTFLoader(loadingManager);
     gltfLoader.setCrossOrigin('anonymous');
 
-    statusText.innerText = "Downloading Moonview Highway...";
-
-    const fullModelUrl = GITHUB_BASE_URL + MODEL_FILENAME;
+    statusEl.innerText = "Downloading Track & Textures...";
 
     gltfLoader.load(
-      fullModelUrl,
+      GITHUB_BASE_URL + MODEL_FILENAME,
       (gltf) => {
         const trackModel = gltf.scene;
-
-        // Calculate Bounding Box to auto-scale track for fast gameplay
-        const bbox = new THREE.Box3().setFromObject(trackModel);
-        const center = bbox.getCenter(new THREE.Vector3());
         
-        // Scale factor for optimal track driving proportions
-        const scaleFactor = 110.0;
-        trackModel.scale.set(scaleFactor, scaleFactor, scaleFactor);
+        // Scale and place track correctly under kart
+        trackModel.scale.set(1, 1, 1);
+        trackModel.position.set(0, 0, 0);
 
-        // Position track centered under the kart
-        trackModel.position.x = -center.x * scaleFactor;
-        trackModel.position.y = -bbox.min.y * scaleFactor;
-        trackModel.position.z = -center.z * scaleFactor;
-
-        // Enhance texture materials and double sided rendering
         trackModel.traverse((child) => {
           if (child.isMesh) {
             child.receiveShadow = true;
             child.castShadow = true;
-            if (child.material) {
-              child.material.side = THREE.DoubleSide;
-              child.material.depthWrite = true;
-            }
           }
         });
 
         scene.add(trackModel);
-
-        // Position Kart onto main road surface
-        playerGroup.position.set(0, 1.2, 0);
-
-        statusText.innerText = "Moonview Highway Ready!";
-        statusDot.classList.add('ready');
-        progressFill.style.width = '100%';
+        statusEl.innerText = "Moonview Highway Loaded!";
       },
       (xhr) => {
         if (xhr.lengthComputable) {
           const percent = Math.round((xhr.loaded / xhr.total) * 100);
-          statusText.innerText = `Loading Track Assets: ${percent}%`;
-          progressFill.style.width = `${percent}%`;
+          statusEl.innerText = `Loading Track: ${percent}%`;
         }
       },
       (error) => {
         console.error("GLTF Load Error:", error);
-        statusText.innerText = "Error loading GLTF from GitHub.";
+        statusEl.innerText = "Error loading map. Check browser console.";
       }
     );
 
-    let currentTilt = 0;
-
+    // ==========================================
+    // 5. GAME LOOP & CHASE CAMERA
+    // ==========================================
     function updatePhysics() {
-      // Acceleration & Braking
       if (keys.forward) {
         speed += acceleration;
         if (speed > maxSpeed) speed = maxSpeed;
@@ -532,44 +287,22 @@
         speed *= friction;
       }
 
-      if (keys.brake) {
-        speed *= 0.82;
-      }
+      if (keys.brake) speed *= 0.85;
 
-      // Steering
       if (Math.abs(speed) > 0.01) {
         const dir = speed > 0 ? 1 : -1;
-        if (keys.left) {
-          playerGroup.rotation.y += turnSpeed * dir;
-          currentTilt = THREE.MathUtils.lerp(currentTilt, 0.15, 0.1);
-        } else if (keys.right) {
-          playerGroup.rotation.y -= turnSpeed * dir;
-          currentTilt = THREE.MathUtils.lerp(currentTilt, -0.15, 0.1);
-        } else {
-          currentTilt = THREE.MathUtils.lerp(currentTilt, 0, 0.1);
-        }
-      } else {
-        currentTilt = THREE.MathUtils.lerp(currentTilt, 0, 0.1);
+        if (keys.left) playerGroup.rotation.y += turnSpeed * dir;
+        if (keys.right) playerGroup.rotation.y -= turnSpeed * dir;
       }
 
-      playerGroup.rotation.z = currentTilt;
       playerGroup.translateZ(speed);
 
-      // Rotate Kart Wheels
-      wheelMeshes.forEach(wheel => {
-        wheel.children[0].rotation.x += speed * 0.8;
-      });
-
-      // Update Speedometer UI
-      const displayKmh = Math.floor(Math.abs(speed) * 90);
-      speedDisplay.innerText = displayKmh < 10 ? `0${displayKmh}` : displayKmh;
-
-      // Smooth Follow Camera
-      const relativeCameraOffset = new THREE.Vector3(0, 6.5, -14.5);
+      // Camera Follow Logic
+      const relativeCameraOffset = new THREE.Vector3(0, 5, -12);
       const cameraPosition = relativeCameraOffset.applyMatrix4(playerGroup.matrixWorld);
       
-      camera.position.lerp(cameraPosition, 0.12);
-      camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1.8, playerGroup.position.z);
+      camera.position.lerp(cameraPosition, 0.1);
+      camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1.2, playerGroup.position.z);
     }
 
     function animate() {
