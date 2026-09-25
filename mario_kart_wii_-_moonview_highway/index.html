@@ -98,7 +98,7 @@
     // ==========================================
     // 1. GITHUB REPOSITORY CONFIGURATION
     // ==========================================
-   const GITHUB_BASE_URL = 'https://raw.githubusercontent.com/CalcSolver/Mario-Kart-Wii-remake/main/mario_kart_wii_-_moonview_highway/';
+    const GITHUB_BASE_URL = 'https://raw.githubusercontent.com/CalcSolver/Mario-Kart-Wii-remake/main/mario_kart_wii_-_moonview_highway/';
     const MODEL_FILENAME = 'scene.gltf';
 
     // DOM Elements
@@ -190,9 +190,22 @@
     });
 
     // ==========================================
-    // 4. STANDARD GLTF LOADER SETUP
+    // 4. SUBFOLDER-AWARE GLTF LOADER SETUP
     // ==========================================
-    const gltfLoader = new THREE.GLTFLoader();
+    const loadingManager = new THREE.LoadingManager();
+
+    // Map any relative texture or bin files back to the subfolder on GitHub
+    loadingManager.setURLModifier((url) => {
+      if (url.startsWith('data:') || url.startsWith('http://') || url.startsWith('https://')) {
+        return url;
+      }
+      
+      // Remove leading slashes or relative dot paths
+      const cleanPath = url.replace(/^(\/|\.\/)/, '');
+      return GITHUB_BASE_URL + cleanPath;
+    });
+
+    const gltfLoader = new THREE.GLTFLoader(loadingManager);
     gltfLoader.setCrossOrigin('anonymous');
 
     statusEl.innerText = "Downloading Track Model...";
